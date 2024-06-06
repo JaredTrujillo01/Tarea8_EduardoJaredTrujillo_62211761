@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "934494699322",
+    "project_id": "crud-tarea8-95b55",
+    "storage_bucket": "crud-tarea8-95b55.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:934494699322:android:215294ba48fbd95d8a9a03",
+        "android_client_info": {
+          "package_name": "com.example.tarea8_crudfirebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXfDIE-Lo4QP2ymQazNHEbs2inK_96dI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
