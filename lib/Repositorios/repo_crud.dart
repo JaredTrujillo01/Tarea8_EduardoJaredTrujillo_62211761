@@ -29,6 +29,6 @@ class NotaRepositorio {
   }
 
   Future<void> eliminarNota(String id) async {
-    await _basedatos.collection('notas').doc(id).delete();
+    await _basedatos.collection('Notas').doc(id).delete();
   }
 }
