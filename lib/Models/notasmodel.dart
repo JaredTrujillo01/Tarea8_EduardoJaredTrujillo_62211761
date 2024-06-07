@@ -16,7 +16,7 @@ class Nota {
   });
 
   factory Nota.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Nota(
       id: doc.id,
       descripcion: data['Descripcion'] ?? '',

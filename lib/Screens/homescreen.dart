@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:tarea8_crudfirebase/Models/notasmodel.dart';
 import 'package:tarea8_crudfirebase/Services/Service_nota.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreens extends StatefulWidget {
-  const HomeScreens({super.key});
-
   @override
-  State<HomeScreens> createState() => _HomeScreensState();
+  _HomeScreensState createState() => _HomeScreensState();
 }
 
 class _HomeScreensState extends State<HomeScreens> {
   final NotaService _notaService = NotaService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,14 +19,17 @@ class _HomeScreensState extends State<HomeScreens> {
         title: const Text(
           "CRUD",
           style: TextStyle(
-              color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),
+            color: Colors.white,
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.black,
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
         onPressed: () {
-          _mostrarDialogoAgregarNota(context);
+          _agregarNota(context);
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -34,36 +37,74 @@ class _HomeScreensState extends State<HomeScreens> {
         stream: _notaService.obtenerNotas(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
+            return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Text('No hay notas');
+            return Center(child: Text('No hay notas'));
           } else {
             final notas = snapshot.data!;
             return ListView.builder(
               itemCount: notas.length,
               itemBuilder: (context, index) {
                 final nota = notas[index];
-                return ListTile(
-                  title: Text(nota.descripcion),
-                  subtitle: Text(nota.fecha.toString()),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          _mostrarDialogoEditarNota(context, nota);
-                        },
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    title: Text(
+                      nota.descripcion,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () async {
-                          await _notaService.eliminarNota(nota.id);
-                        },
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Fecha: ${DateFormat('yyyy-MM-dd').format(nota.fecha)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            'Estado: ${nota.estado}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            'Importante: ${nota.importante ? 'Sí' : 'No'}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                    isThreeLine: true,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            _editarNota(context, nota);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            await _notaService.eliminarNota(nota.id);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -74,16 +115,74 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  void _mostrarDialogoAgregarNota(BuildContext context) {
+  void _agregarNota(BuildContext context) {
     final TextEditingController descripcionController = TextEditingController();
+    String estado = 'creado';
+    bool importante = false;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Agregar Nota'),
-          content: TextField(
-            controller: descripcionController,
-            decoration: InputDecoration(labelText: 'Descripción'),
+          content: SingleChildScrollView(
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: descripcionController,
+                        decoration: InputDecoration(
+                          labelText: 'Descripción',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text('Estado',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      DropdownButton<String>(
+                        value: estado,
+                        isExpanded: true,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            estado = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'creado',
+                          'por hacer',
+                          'trabajando',
+                          'finalizado'
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Text('Importante',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Checkbox(
+                            value: importante,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                importante = value!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -99,8 +198,8 @@ class _HomeScreensState extends State<HomeScreens> {
                   id: '',
                   descripcion: descripcionController.text,
                   fecha: DateTime.now(),
-                  estado: 'creado',
-                  importante: false,
+                  estado: estado,
+                  importante: importante,
                 );
                 await _notaService.agregarNota(nuevaNota);
                 Navigator.of(context).pop();
@@ -112,17 +211,75 @@ class _HomeScreensState extends State<HomeScreens> {
     );
   }
 
-  void _mostrarDialogoEditarNota(BuildContext context, Nota nota) {
+  void _editarNota(BuildContext context, Nota nota) {
     final TextEditingController descripcionController =
         TextEditingController(text: nota.descripcion);
+    String estado = nota.estado;
+    bool importante = nota.importante;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Editar Nota'),
-          content: TextField(
-            controller: descripcionController,
-            decoration: InputDecoration(labelText: 'Descripción'),
+          content: SingleChildScrollView(
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: descripcionController,
+                        decoration: InputDecoration(
+                          labelText: 'Descripción',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text('Estado',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      DropdownButton<String>(
+                        value: estado,
+                        isExpanded: true,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            estado = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'creado',
+                          'por hacer',
+                          'trabajando',
+                          'finalizado'
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Text('Importante',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Checkbox(
+                            value: importante,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                importante = value!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -138,8 +295,8 @@ class _HomeScreensState extends State<HomeScreens> {
                   id: nota.id,
                   descripcion: descripcionController.text,
                   fecha: nota.fecha,
-                  estado: nota.estado,
-                  importante: nota.importante,
+                  estado: estado,
+                  importante: importante,
                 );
                 await _notaService.actualizarNota(notaActualizada);
                 Navigator.of(context).pop();
